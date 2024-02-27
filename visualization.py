@@ -37,7 +37,7 @@ def create_visualizations(data: str, question: str, visualization_type: str):
     best_num_clusters = 0
     best_silhouette_score = -1
     silhouette_scores = []
-    range_of_clusters = range(3, 11)  # Starting from 2 because silhouette score cannot be calculated for a single cluster
+    range_of_clusters = range(3, 20)  # Starting from 2 because silhouette score cannot be calculated for a single cluster
 
     # Calculate silhouette scores for different numbers of clusters
     for k in range_of_clusters:
@@ -80,11 +80,11 @@ def create_visualizations(data: str, question: str, visualization_type: str):
     labels = {}
     for key, value in class_dict.items():
         completion = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4-0125-preview",
             messages=[
                 {"role": "system", "content": f"""Brugeren vil give dig en masse tekster. 
                  - Du skal med MAKSIMALT 3 ord give en årsag til problemerne. 
-                 - Årsagen må ikke være tæt på en af disse '{', '.join(labels.values())}'.
+                 - Svaret må ikke være tæt på en af disse '{', '.join(labels.values())}'.
                  - Teksterne er relateret til dette spørgsmål: {question}"""},
                 {"role": "user", "content": "---\n".join(value)}
             ]
@@ -129,8 +129,8 @@ def create_visualizations(data: str, question: str, visualization_type: str):
     distances_df.index = sorted_labels
 
     # Save the DataFrame to a CSV file
-    distances_df.to_csv(f'cluster_distances-{visualization_type}.csv')
-    print("Cluster distances with named labels saved to cluster_distances.csv.")
+    distances_df.to_csv(f'cluster-distances-{visualization_type}.csv')
+    print(f"Cluster distances with named labels saved to cluster-distances-{visualization_type}.csv.")
 
 
-# create_visualizations("solution_output.csv", "Some random question", "solution")
+create_visualizations("cause_output.csv", "Hvad er efter din mening de(n) vigtigste årsag(er) til mistrivslen blandt børn og unge?", "cause")

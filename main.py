@@ -2,11 +2,11 @@ from create_csv import create_files
 from visualization import create_visualizations
 
 # Questions
-cause_question = "Hvad er efter din mening de(n) vigtigste årsag(er) til, at den kollektive trafik i yderområderne i Danmark ikke er tilstrækkelig?"
-solution_question = "Hvordan kan man efter din opfattelse bedst forbedre den kollektive trafik i yderområderne i Danmark?"
+cause_question = "Hvad er efter din mening de(n) vigtigste årsag(er) til mistrivslen blandt børn og unge?"
+solution_question = "Hvordan kan man efter din opfattelse bedst forbedre trivslen blandt børn og unge?"
 
 # xlsx path
-xlsx_path = "Resultater_kollektiv trafik.xlsx"
+xlsx_path = "Resultater_mistrivsel.xlsx"
 
 cause, solution = create_files(xlsx_path, cause_question, solution_question)
 
