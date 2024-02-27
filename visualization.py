@@ -8,7 +8,7 @@ from sklearn.metrics import silhouette_score
 import umap
 from openai import OpenAI
 from constants import OPENAI_API_KEY
-from scipy.spatial.distance import cdist
+from scipy.spatial.distance import cdist, cosine
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -25,19 +25,28 @@ def create_visualizations(data: str, question: str, visualization_type: str):
     print("DATA EVALUATED")
 
     # Convert the list of embeddings into a numpy array
-    embeddings_array = np.stack(embeddings.values)
+    embeddings_array_stacked = np.stack(embeddings.values)
     print("ARRAY CREATED")
+    print(embeddings_array_stacked)
+    center_embedding = np.mean(embeddings_array_stacked, axis=0)
+
+    # Step 3: Calculate the Euclidean distance of each embedding to the center embedding
+    distances = np.sqrt(np.sum((embeddings_array_stacked - center_embedding)**2, axis=1))
+    cosine_distances = np.array([cosine(embedding, center_embedding) for embedding in embeddings_array_stacked])
+    single_value_distance_cosine = sum(cosine_distances)/len(cosine_distances)
+    single_value_distance_euc = sum(distances)/len(distances)
+
 
     # Standardize features by removing the mean and scaling to unit variance
     scaler = StandardScaler()
-    embeddings_scaled = scaler.fit_transform(embeddings_array)
+    embeddings_scaled = scaler.fit_transform(embeddings_array_stacked)
     print("ARRAY SCALED")
 
     # Initialize variables for silhouette analysis
     best_num_clusters = 0
     best_silhouette_score = -1
     silhouette_scores = []
-    range_of_clusters = range(3, 20)  # Starting from 2 because silhouette score cannot be calculated for a single cluster
+    range_of_clusters = range(2, 20)  # Starting from 2 because silhouette score cannot be calculated for a single cluster
 
     # Calculate silhouette scores for different numbers of clusters
     for k in range_of_clusters:
@@ -83,7 +92,8 @@ def create_visualizations(data: str, question: str, visualization_type: str):
             model="gpt-4-0125-preview",
             messages=[
                 {"role": "system", "content": f"""Brugeren vil give dig en masse tekster. 
-                 - Du skal med MAKSIMALT 3 ord give en årsag til problemerne. 
+                 - Du skal med MAKSIMALT 3 ord give en årsag til problemerne.
+                 - Dit svar skal bruges til at klassificere teksterne. 
                  - Svaret må ikke være tæt på en af disse '{', '.join(labels.values())}'.
                  - Teksterne er relateret til dette spørgsmål: {question}"""},
                 {"role": "user", "content": "---\n".join(value)}
@@ -120,6 +130,8 @@ def create_visualizations(data: str, question: str, visualization_type: str):
 
     # Calculate the distances between centroids as before
     distances = cdist(centroids, centroids, 'euclidean')
+    matrix_sum = np.sum(distances)
+    disagreement_value = matrix_sum/best_num_clusters
 
     # Convert the distances matrix to a DataFrame for easier handling
     distances_df = pd.DataFrame(distances)
@@ -133,4 +145,9 @@ def create_visualizations(data: str, question: str, visualization_type: str):
     print(f"Cluster distances with named labels saved to cluster-distances-{visualization_type}.csv.")
 
 
-create_visualizations("cause_output.csv", "Hvad er efter din mening de(n) vigtigste årsag(er) til mistrivslen blandt børn og unge?", "cause")
+    print("***"*5+"Stastics"+"***"*5)
+    print("Single value distance cosine:", single_value_distance_cosine)
+    print("Single value distance euc: ", single_value_distance_euc)
+    print(f"Intercluster-disagreement value: {disagreement_value}")
+
+create_visualizations("kollektivtrafik/cause_output.csv", "Hvad er efter din mening de(n) vigtigste årsag(er) til mistrivslen blandt børn og unge?", "cause")
