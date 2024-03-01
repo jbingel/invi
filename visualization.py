@@ -21,13 +21,11 @@ def create_visualizations(data: str, question: str, visualization_type: str):
     embeddings = embeddings.apply(ast.literal_eval)
     # Text labels for each point from "s_8" column
     text_labels = data['question'].dropna().values
-    print(text_labels)
     print("DATA EVALUATED")
 
     # Convert the list of embeddings into a numpy array
     embeddings_array_stacked = np.stack(embeddings.values)
     print("ARRAY CREATED")
-    print(embeddings_array_stacked)
     center_embedding = np.mean(embeddings_array_stacked, axis=0)
 
     # Step 3: Calculate the Euclidean distance of each embedding to the center embedding
@@ -100,7 +98,6 @@ def create_visualizations(data: str, question: str, visualization_type: str):
             ]
         )
 
-        print(completion.choices[0].message.content)
         labels[key] = completion.choices[0].message.content
 
     # Access the centroids
@@ -115,9 +112,6 @@ def create_visualizations(data: str, question: str, visualization_type: str):
         plt.annotate(cluster_label, (centroid[0], centroid[1]), fontsize=9, weight='bold', color='black', alpha=0.75)
 
     plt.scatter(embeddings_2d_umap_cosine[:, 0], embeddings_2d_umap_cosine[:, 1], c=clusters, cmap='Spectral')
-    # for i, txt in enumerate(text_labels):
-    #     if i % 20 == 0:  # Adjust this value as needed
-    #         plt.annotate(txt, (embeddings_2d_umap_cosine[i, 0], embeddings_2d_umap_cosine[i, 1]), fontsize=9, alpha=0.75, color='red')
     plt.scatter(centroids[:, 0], centroids[:, 1], marker='X', s=200, c='black', label='Centroids')
     plt.title(f'2D visualisering af {question}')
     plt.xlabel('UMAP Dimension 1')
@@ -148,4 +142,4 @@ def create_visualizations(data: str, question: str, visualization_type: str):
     print("***"*5+"Stastics"+"***"*5)
     print("Single value distance cosine:", single_value_distance_cosine)
     print("Single value distance euc: ", single_value_distance_euc)
-    print(f"Intercluster-disagreement value: {disagreement_value}")
+    print("Intercluster-disagreement value: ", disagreement_value)
