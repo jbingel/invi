@@ -149,5 +149,3 @@ def create_visualizations(data: str, question: str, visualization_type: str):
     print("Single value distance cosine:", single_value_distance_cosine)
     print("Single value distance euc: ", single_value_distance_euc)
     print(f"Intercluster-disagreement value: {disagreement_value}")
-
-create_visualizations("kollektivtrafik/cause_output.csv", "Hvad er efter din mening de(n) vigtigste årsag(er) til mistrivslen blandt børn og unge?", "cause")
