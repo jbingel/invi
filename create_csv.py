@@ -8,9 +8,23 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Read the excel file
 
-def create_files(xlsx_path, cause_question, solution_question):
+def create_files(xlsx_path, cause_question, solution_question, sort_question, sort_value):
     print("Reading excel file")
     df = pd.read_excel(xlsx_path, sheet_name='Complete')
+    print(df.head(5))
+    mapping = {
+        "Ved ikke": 0,
+        "I meget lav grad": 1,
+        "I lav grad": 2,
+        "Hverken eller": 3,
+        "I høj grad": 4,
+        "I meget høj grad": 5
+    }
+
+    df[sort_question] = df[sort_question].map(mapping)
+
+    
+
 
     def get_embedding(text, model="text-embedding-3-large"):
         if isinstance(text, str):
@@ -36,7 +50,7 @@ def create_files(xlsx_path, cause_question, solution_question):
     # Initialize lists to store combined texts from each category
     combined_causes = []
     combined_solutions = []
-
+    
     # Iterate over each row in df to combine texts from cause and solution columns
     print("Get all text from those columns")
     for cause in causes:
