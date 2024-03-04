@@ -44,6 +44,7 @@ pip install -r requirements.txt
 ### Start
 Du kører programmet ved at udfylde de relevante variable i main.py. Dette inkluderer stien til excelfilen, `cause_question`, `solution_question` og `filter_question`.
 
+Du kører programmet ved at indtaste `python main.py`
 
 
 
