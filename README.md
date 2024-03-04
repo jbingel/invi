@@ -9,11 +9,13 @@ Projektet består af to primære scripts:
 
 Koden beregner også 3 distance scores, der kan bruges til at måle "vildheden" af et problem/årsag:
 
-``````
+```
 Single value distance cosine: 0.3322840775867809 - Et mål for den gennemsnitlige spredning/uenighed. Måles som gennemsnittet af alle embeddings og derefter af hver embeddings afstand til gennemsnittet. Dette kan ses som et vægtet gennemsnit af hvor vildt et problem/årsag er.
 Single value distance euc:  0.740568916160349 - Samme som ovenstående, bare hvor distancen er til center vektoren er målt med euklidisk distance.
 Intercluster-disagreement value: 2.6223664079975366 - Et mål for hvor mange forskellige holdninger der er til et givent problem, samt hvor langt de i gennemsnit er fra hinanden. Flere holdninger (clusters), giver typisk en højere værdi.
-``````
+```
+
+3. **main.py**: Dette script skal bruges til at køre hele pipelinen. Her defineres dit relevante spørgsmål samt spørgsmål man vil filtrere på og en tilhørende værdi.
 
 
 ## Funktionalitet
@@ -31,11 +33,17 @@ Intercluster-disagreement value: 2.6223664079975366 - Et mål for hvor mange for
 - **Output**: Billedfiler med plots af klyngerne og deres silhouetscores, som hjælper med at forstå de dominerende årsager til og foreslåede løsninger på mistrivsel blandt børn og unge.
 
 ## Brug
+### Installation
 
-For at køre disse scripts, skal du have Python installeret på dit system samt de nødvendige biblioteker, som inkluderer `pandas`, `numpy`, `matplotlib`, `sklearn`, `umap-learn`, og `openai`. Du kan installere disse ved at køre:
+For at køre disse scripts, skal du have Python 3.9 (eller højere) installeret på dit system samt de nødvendige biblioteker, som inkluderer `pandas`, `numpy`, `matplotlib`, `sklearn`, `umap-learn`, og `openai`. Du kan installere disse ved at køre:
 
 ```bash
 pip install -r requirements.txt
 ```
+
+### Start
+Du kører programmet ved at udfylde de relevante variable i main.py. Dette inkluderer stien til excelfilen, `cause_question`, `solution_question` og `filter_question`.
+
+
 
 
