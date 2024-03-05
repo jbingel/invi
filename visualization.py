@@ -83,7 +83,7 @@ def create_visualizations(data: str, question: str, visualization_type: str):
             class_dict[cls] = []
         class_dict[cls].append(string)
 
-
+    # Create labels for each of the clusers.
     labels = {}
     for key, value in class_dict.items():
         completion = client.chat.completions.create(
