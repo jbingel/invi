@@ -10,7 +10,7 @@ Projektet består af to primære scripts:
 Koden beregner også 3 distance scores, der kan bruges til at måle "vildheden" af et problem/årsag:
 
 ```
-Single value distance cosine: 0.3322840775867809 - Et mål for den gennemsnitlige spredning/uenighed. Måles som gennemsnittet af alle embeddings og derefter af hver embeddings afstand til gennemsnittet. Dette kan ses som et vægtet gennemsnit af hvor vildt et problem/årsag er. 
+Single value distance cosine: 0.3322840775867809 - Et mål for den gennemsnitlige spredning/uenighed. Måles som gennemsnittet af alle embeddings og derefter af hver embeddings afstand til gennemsnittet. Dette kan ses som et vægtet gennemsnit af hvor vildt et problem/årsag er. Værdien 0 betyder at de er ens, og værdien 1 betyder at de er komplet forskellige.
 Single value distance euc:  0.740568916160349 - Samme som ovenstående, bare hvor distancen er til center vektoren er målt med euklidisk distance.
 Intercluster-disagreement value: 2.6223664079975366 - Et mål for hvor mange forskellige holdninger der er til et givent problem, samt hvor langt de i gennemsnit er fra hinanden. Flere holdninger (clusters), giver typisk en højere værdi. Beregnes som afstanden af center clusterene imellem divideret med antallet af clustre. 
 ```
