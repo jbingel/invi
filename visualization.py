@@ -32,7 +32,9 @@ def create_visualizations(data: str, question: str, visualization_type: str):
     distances = np.sqrt(np.sum((embeddings_array_stacked - center_embedding)**2, axis=1))
     cosine_distances = np.array([cosine(embedding, center_embedding) for embedding in embeddings_array_stacked])
     single_value_distance_cosine = sum(cosine_distances)/len(cosine_distances)
+    single_value_distance_cosine_var = np.var(cosine_distances)
     single_value_distance_euc = sum(distances)/len(distances)
+    single_value_distance_euc_var = np.var(distances)
 
 
     # Standardize features by removing the mean and scaling to unit variance
@@ -59,6 +61,10 @@ def create_visualizations(data: str, question: str, visualization_type: str):
             best_num_clusters = k
 
     print("Best silhouette score was", best_silhouette_score, "for", best_num_clusters, "clusters.")
+    kmeans = KMeans(n_clusters=best_num_clusters, random_state=42)
+    cluster_index = kmeans.fit_predict(embeddings_scaled)
+    data['cluster_index'] = cluster_index
+
 
     # Plotting the silhouette scores for visual inspection
     plt.figure(figsize=(8, 4))
@@ -99,6 +105,13 @@ def create_visualizations(data: str, question: str, visualization_type: str):
         )
 
         labels[key] = completion.choices[0].message.content
+    
+    def map_cluster_to_label(cluster_index):
+        return labels.get(cluster_index, 'N/A')  # Return 'N/A' if no label is found for the cluster index
+
+    data['cluster_label'] = data['cluster_index'].apply(map_cluster_to_label)
+
+    data.to_excel(f"{visualization_type}-final.xlsx", index=False)
 
     # Access the centroids
     centroids = kmeans.cluster_centers_
@@ -140,6 +153,10 @@ def create_visualizations(data: str, question: str, visualization_type: str):
 
 
     print("***"*5+"Stastics"+"***"*5)
-    print("Single value distance cosine:", single_value_distance_cosine)
+    print("Single value distance cosine: ", single_value_distance_cosine)
+    print("Single value distance cosine var: ", single_value_distance_cosine_var)
     print("Single value distance euc: ", single_value_distance_euc)
+    print("Single value distance euc var: ", single_value_distance_euc_var)
     print("Intercluster-disagreement value: ", disagreement_value)
+
+create_visualizations('cause_output.csv', "bib", 'cause')
