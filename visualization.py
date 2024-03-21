@@ -159,4 +159,3 @@ def create_visualizations(data: str, question: str, visualization_type: str):
     print("Single value distance euc var: ", single_value_distance_euc_var)
     print("Intercluster-disagreement value: ", disagreement_value)
 
-create_visualizations('cause_output.csv', "bib", 'cause')
