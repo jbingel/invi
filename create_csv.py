@@ -60,7 +60,7 @@ def create_files(xlsx_path, cause_question, solution_question, filter_question, 
 
     # Apply mapping to a specific question in the DataFrame to filter data
     df[filter_question] = df[filter_question].map(mapping)
-    df = df[df[filter_question] <= filter_value]
+    df = df[df[filter_question] >= filter_value]
     
     print(f"The filtered DataFrame contains {len(df)} entries.")
 
