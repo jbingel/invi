@@ -49,18 +49,19 @@ def create_files(xlsx_path, cause_question, solution_question, filter_question, 
     print(f"DataFrame contains {len(df)} entries.")
     
     # Mapping from textual answers to numerical values
-    mapping = {
-        "Ved ikke": 0,
-        "I meget lav grad": 1,
-        "I lav grad": 2,
-        "Hverken eller": 3,
-        "I høj grad": 4,
-        "I meget høj grad": 5
-    }
+    if filter_value != -1:
+        mapping = {
+            "Ved ikke": 0,
+            "I meget lav grad": 1,
+            "I lav grad": 2,
+            "Hverken eller": 3,
+            "I høj grad": 4,
+            "I meget høj grad": 5
+        }
 
-    # Apply mapping to a specific question in the DataFrame to filter data
-    df[filter_question] = df[filter_question].map(mapping)
-    df = df[df[filter_question] >= filter_value]
+        # Apply mapping to a specific question in the DataFrame to filter data
+        df[filter_question] = df[filter_question].map(mapping)
+        df = df[df[filter_question] >= filter_value]
     
     print(f"The filtered DataFrame contains {len(df)} entries.")
 
