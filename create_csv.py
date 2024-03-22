@@ -54,8 +54,8 @@ def create_files(xlsx_path, cause_question, solution_question, filter_question, 
             "Ved ikke": 0,
             "I meget lav grad": 1,
             "I lav grad": 2,
-            "Hverken eller": 3,
-            "I høj grad": 4,
+            "Hverken eller ": 3,
+            "I høj grad ": 4,
             "I meget høj grad": 5
         }
 
