@@ -10,7 +10,7 @@ filter_question = "I hvor høj grad synes du, at du i dit arbejde, er relevant f
 xlsx_path = "Resultater_mistrivsel_final.xlsx"
 
 # Anvender create_files funktionen med den angivne sti og spørgsmål. Funktionen returnerer stierne til to CSV-filer: en for årsager og en for løsninger.
-cause, solution = create_files(xlsx_path, cause_question, solution_question, filter_question, filter_value=5)
+cause, solution = create_files(xlsx_path, cause_question, solution_question, filter_question, filter_value=-1)
 
 # Bruger create_visualizations funktionen til at generere visualiseringer for årsager til mistrivsel.
 create_visualizations(cause, cause_question, "cause")
