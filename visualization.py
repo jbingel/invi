@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,37 +10,21 @@ import umap
 from openai import OpenAI
 from constants import OPENAI_API_KEY
 from scipy.spatial.distance import cdist, cosine
+import scipy 
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 
-def create_visualizations(data: str, question: str, visualization_type: str):
-    data = pd.read_csv(data)
-
-    # Prepare the embeddings
-    embeddings = data['question_embedding'].dropna()
-    embeddings = embeddings.apply(ast.literal_eval)
-    # Text labels for each point from "s_8" column
-    text_labels = data['question'].dropna().values
-    print("DATA EVALUATED")
-
-    # Convert the list of embeddings into a numpy array
-    embeddings_array_stacked = np.stack(embeddings.values)
-    print("ARRAY CREATED")
-    center_embedding = np.mean(embeddings_array_stacked, axis=0)
-
-    # Step 3: Calculate the Euclidean distance of each embedding to the center embedding
-    distances = np.sqrt(np.sum((embeddings_array_stacked - center_embedding)**2, axis=1))
-    cosine_distances = np.array([cosine(embedding, center_embedding) for embedding in embeddings_array_stacked])
-    single_value_distance_cosine = sum(cosine_distances)/len(cosine_distances)
-    single_value_distance_cosine_var = np.var(cosine_distances)
-    single_value_distance_euc = sum(distances)/len(distances)
-    single_value_distance_euc_var = np.var(distances)
-
-
-    # Standardize features by removing the mean and scaling to unit variance
+def create_visualizations(
+        df: pd.DataFrame, 
+        embeddings: np.ndarray, 
+        output_dir: str,
+        response_type: str,
+        text_labels: list[str] = None,
+        question: str = None
+    ):
     scaler = StandardScaler()
-    embeddings_scaled = scaler.fit_transform(embeddings_array_stacked)
+    embeddings_scaled = scaler.fit_transform(embeddings)
     print("ARRAY SCALED")
 
     # Initialize variables for silhouette analysis
@@ -63,7 +48,7 @@ def create_visualizations(data: str, question: str, visualization_type: str):
     print("Best silhouette score was", best_silhouette_score, "for", best_num_clusters, "clusters.")
     kmeans = KMeans(n_clusters=best_num_clusters, random_state=42)
     cluster_index = kmeans.fit_predict(embeddings_scaled)
-    data['cluster_index'] = cluster_index
+    df['cluster_index'] = cluster_index
 
 
     # Plotting the silhouette scores for visual inspection
@@ -72,9 +57,9 @@ def create_visualizations(data: str, question: str, visualization_type: str):
     plt.xlabel('Number of clusters (k)')
     plt.ylabel('Silhouette Score')
     plt.title('Silhouette Score for Various Numbers of Clusters')
-    plt.savefig(f'clusters-{visualization_type}.png')
-
-    # Apply UMAP reduction and clustering with the optimal number of clusters
+    plt.savefig(f'{output_dir}/clusters-{response_type}.png')
+    # Apply UMAP reduction and
+    #  clustering with the optimal number of clusters
     reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, n_components=2, metric='cosine')
     embeddings_2d_umap_cosine = reducer.fit_transform(embeddings_scaled)
     print("REDUCED DIMENSIONS")
@@ -92,27 +77,16 @@ def create_visualizations(data: str, question: str, visualization_type: str):
     # Create labels for each of the clusers.
     labels = {}
     for key, value in class_dict.items():
-        completion = client.chat.completions.create(
-            model="gpt-4-0125-preview",
-            messages=[
-                {"role": "system", "content": f"""Brugeren vil give dig en masse tekster. 
-                 - Du skal med MAKSIMALT 3 ord give en årsag til problemerne.
-                 - Dit svar skal bruges til at klassificere teksterne. 
-                 - Svaret må ikke være tæt på en af disse '{', '.join(labels.values())}'.
-                 - Teksterne er relateret til dette spørgsmål: {question}"""},
-                {"role": "user", "content": "---\n".join(value)}
-            ]
-        )
-
-        labels[key] = completion.choices[0].message.content
+        labels[key] = value[0]
     
     def map_cluster_to_label(cluster_index):
         return labels.get(cluster_index, 'N/A')  # Return 'N/A' if no label is found for the cluster index
 
-    data['cluster_label'] = data['cluster_index'].apply(map_cluster_to_label)
+    df['cluster_label'] = df['cluster_index'].apply(map_cluster_to_label)
 
-    data.to_excel(f"{visualization_type}-final.xlsx", index=False)
+    df.to_excel(f"{output_dir}/{response_type}-final.xlsx", index=False)
 
+    
     # Access the centroids
     centroids = kmeans.cluster_centers_
 
@@ -129,7 +103,7 @@ def create_visualizations(data: str, question: str, visualization_type: str):
     plt.title(f'2D visualisering af {question}')
     plt.xlabel('UMAP Dimension 1')
     plt.ylabel('UMAP Dimension 2')
-    plt.savefig(f'2D_embeddings_plot_with_optimal_clusters-{visualization_type}.png')
+    plt.savefig(f'{output_dir}/2D_embeddings_plot_with_optimal_clusters-{response_type}.png')
     plt.close()
     print("File saved with", best_num_clusters, "clusters.")
 
@@ -148,14 +122,5 @@ def create_visualizations(data: str, question: str, visualization_type: str):
     distances_df.index = sorted_labels
 
     # Save the DataFrame to a CSV file
-    distances_df.to_csv(f'cluster-distances-{visualization_type}.csv')
-    print(f"Cluster distances with named labels saved to cluster-distances-{visualization_type}.csv.")
-
-
-    print("***"*5+"Stastics"+"***"*5)
-    print("Single value distance cosine: ", single_value_distance_cosine)
-    print("Single value distance cosine var: ", single_value_distance_cosine_var)
-    print("Single value distance euc: ", single_value_distance_euc)
-    print("Single value distance euc var: ", single_value_distance_euc_var)
-    print("Intercluster-disagreement value: ", disagreement_value)
-
+    distances_df.to_csv(f'{output_dir}/cluster-distances-{response_type}.csv')
+    print(f"Cluster distances with named labels saved to cluster-distances-{response_type}.csv.")
