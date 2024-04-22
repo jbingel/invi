@@ -1,6 +1,9 @@
 # Analyse af vilde problemer
 Dette program analyserer besvarelser af INVIs spørgeskema om vilde problemer. Målet er at beregne et uenigheds-score over svarene, hvor antagelsen er, at høj uenighed kendetegner et særligt vildt problem.
 
+## Get started
+Koden er skrevet i Python og testet med Python version 3.11. For at installere de nødvendige packages, kan du køre `pip install -r requirements.txt`. 
+
 ## Sådan bruger man koden
 
 Du starter analysen ved at køre
