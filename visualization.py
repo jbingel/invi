@@ -1,18 +1,13 @@
-import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import ast
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 import umap
-from openai import OpenAI
-from constants import OPENAI_API_KEY
 from scipy.spatial.distance import cdist, cosine
-import scipy 
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+from text_processing import get_cluster_label
 
 
 def create_visualizations(
@@ -69,15 +64,17 @@ def create_visualizations(
 
     # Create dict with keys as cluster number and value of list of strings.
     class_dict = {}
-    for cls, string in zip(clusters, text_labels):
+    for cls, responses in zip(clusters, text_labels):
         if cls not in class_dict:
             class_dict[cls] = []
-        class_dict[cls].append(string)
+        class_dict[cls].append(responses)
 
     # Create labels for each of the clusers.
     labels = {}
-    for key, value in class_dict.items():
-        labels[key] = value[0]
+    for key, responses in class_dict.items():
+        labels[key] = responses[0]
+        # labels[key] = get_cluster_label(question, tuple(responses), tuple(labels.values()))
+        
     
     def map_cluster_to_label(cluster_index):
         return labels.get(cluster_index, 'N/A')  # Return 'N/A' if no label is found for the cluster index
@@ -90,8 +87,6 @@ def create_visualizations(
     # Access the centroids
     centroids = kmeans.cluster_centers_
 
-
-    print(labels)
     # Visualization
     plt.figure(figsize=(10, 8))
     for i, centroid in enumerate(centroids):
@@ -99,28 +94,10 @@ def create_visualizations(
         plt.annotate(cluster_label, (centroid[0], centroid[1]), fontsize=9, weight='bold', color='black', alpha=0.75)
 
     plt.scatter(embeddings_2d_umap_cosine[:, 0], embeddings_2d_umap_cosine[:, 1], c=clusters, cmap='Spectral')
-    plt.scatter(centroids[:, 0], centroids[:, 1], marker='X', s=200, c='black', label='Centroids')
+    plt.scatter(centroids[:, 0], centroids[:, 1], marker='X', s=200, c='black', alpha=.5, label='Centroids')
     plt.title(f'2D visualisering af {question}')
     plt.xlabel('UMAP Dimension 1')
     plt.ylabel('UMAP Dimension 2')
     plt.savefig(f'{output_dir}/2D_embeddings_plot_with_optimal_clusters-{response_type}.png')
     plt.close()
     print("File saved with", best_num_clusters, "clusters.")
-
-    sorted_labels = [labels[i] for i in sorted(labels.keys())]
-
-    # Calculate the distances between centroids as before
-    distances = cdist(centroids, centroids, 'euclidean')
-    matrix_sum = np.sum(distances)
-    disagreement_value = matrix_sum/best_num_clusters
-
-    # Convert the distances matrix to a DataFrame for easier handling
-    distances_df = pd.DataFrame(distances)
-
-    # Label the rows and columns with the sorted_labels for clarity
-    distances_df.columns = sorted_labels
-    distances_df.index = sorted_labels
-
-    # Save the DataFrame to a CSV file
-    distances_df.to_csv(f'{output_dir}/cluster-distances-{response_type}.csv')
-    print(f"Cluster distances with named labels saved to cluster-distances-{response_type}.csv.")

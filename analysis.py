@@ -37,7 +37,6 @@ def rowwise_gini(X):
         g.append(gini(col))
     return np.mean(g)
 
-
 def analyze(
         augmented_data_path: str, 
         question: str, 
@@ -49,6 +48,21 @@ def analyze(
     ):
 
     df = pd.read_csv(augmented_data_path)
+
+    report_file = os.path.join(output_dir, f"{response_type}_analysis.md")
+
+    with open(report_file, "w") as f:
+        f.write(f"# {response_type.capitalize()} analysis\n\n")
+        f.write(f"Question: {question}\n")
+        f.write(f"Using condensed answers for analysis: {'Yes' if condensed else 'No'}\n")
+        f.write("\n")
+        # Write value counts of condensed_response column
+        f.write(f"## Overview of responses\n")
+        f.write(f"Value counts of condensed responses:\n")
+        f.write(df["condensed_response"].value_counts().to_markdown())
+        f.write("\n")
+
+        f.write
 
     # Prepare the embeddings
     response_column = "response" if not condensed else "condensed_response" 
@@ -67,17 +81,17 @@ def analyze(
     print("DATA EVALUATED")
 
     # Convert the list of embeddings into a numpy array
-    center_embedding = np.mean(embeddings, axis=0)
+    mean = np.mean(embeddings, axis=0)
 
-    # Step 3: Calculate the Euclidean distance of each embedding to the center embedding
-    distances = np.sqrt(np.sum((embeddings - center_embedding)**2, axis=1))
-    cosine_distances = np.array([cosine(embedding, center_embedding) for embedding in embeddings])
-    single_value_distance_cosine = sum(cosine_distances)/len(cosine_distances)
-    single_value_distance_cosine_var = np.var(cosine_distances)
-    single_value_distance_euc = sum(distances)/len(distances)
-    single_value_distance_euc_var = np.var(distances)
+    # Step 3: Calculate the Euclidean distance of each embedding to the mean embedding
+    distances = np.sqrt(np.sum((embeddings - mean)**2, axis=1))
+    variance = np.mean(distances)
 
-    gini = rowwise_gini(normalize(embeddings))
+    cosine_distances = np.array([cosine(embedding, mean) for embedding in embeddings])
+    avg_cosine_distance = np.mean(cosine_distances) ** 2
+
+    gini = rowwise_gini(normalize(embeddings)) 
+
     entropy = scipy.special.entr(
         normalize(embeddings)
     ).sum(axis=1).mean()
@@ -95,15 +109,14 @@ def analyze(
     results = pd.DataFrame([
         {
             "metric": "Avg. distance from mean",
-            "value": single_value_distance_euc
+            "value": avg_cosine_distance
         },
         {
-            "metric": "Variance of distance from mean",
-            "value": single_value_distance_euc_var
+            "metric": "Variance",
+            "value": variance
         },
         {
             "metric": "Entropy",
-
             "value": entropy
         },
         {
@@ -113,6 +126,9 @@ def analyze(
     ])
 
     print(results.to_markdown())
-    with open(os.path.join(output_dir, f"{response_type}_analysis.md"), "w") as f:
+    
+    with open(os.path.join(output_dir, f"{response_type}_analysis.md"), "a") as f:
+        f.write("\n\n")
+        f.write("## Metrics \n\n")
         f.write(results.to_markdown())
 

@@ -42,15 +42,27 @@ def get_embedding(text: str, model="text-embedding-3-large"):
 
 @lru_cache(10000)
 def get_cluster_label(question: str, responses: Iterable[str], labels: Iterable[str], model: str=DEFAULT_MODEL):
+
+    system_prompt = f"""Din opgave er at finde overskrifter til besvarelser af et
+    spørgeskema omkring løsninger og årsager til samfundsrelevante problemer.
+    Brugeren har allerede grupperet besvarelserne tematisk. Det er nu din opgave
+    at give hver gruppe en overskrift.
+
+    Overskriften må kun være ét ord.
+
+    DU MÅ ALTID KUN SVARE MED ÉT ORD.
+
+    Den skal ikke være tæt på en af disse: {', '.join(labels)}
+
+    Det her er spørgsmålet, som besvarelserne handler om: {question}
+
+    """
+
     completion = client.chat.completions.create(
             model=model,
             messages=[
-                {"role": "system", "content": f"""Brugeren vil give dig en masse tekster. 
-                 - Du skal med MAKSIMALT 3 ord give en årsag til problemerne.
-                 - Dit svar skal bruges til at klassificere teksterne. 
-                 - Svaret må ikke være tæt på en af disse '{', '.join(labels)}'.
-                 - Teksterne er relateret til dette spørgsmål: {question}"""},
-                {"role": "user", "content": "---\n".join(responses)}
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": "Her er besvarelserne ---\n".join(responses)}
             ]
         )
     return completion.choices[0].message.content
