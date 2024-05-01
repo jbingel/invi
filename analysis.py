@@ -48,6 +48,8 @@ def analyze(
     ):
 
     df = pd.read_csv(augmented_data_path)
+    if "relevant" in df.columns:
+        df = df[df.relevant == True]
 
     report_file = os.path.join(output_dir, f"{response_type}_analysis.md")
 
