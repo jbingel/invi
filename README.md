@@ -8,12 +8,13 @@ Koden er skrevet i Python og testet med Python version 3.11. For at installere d
 
 Du starter analysen ved at køre
 ```bash
-python main.py [PROBLEM] 
+python main.py [PROBLEMS] 
 ```
-Her skal der indsættes `mistrivsel` eller `trafik` i stedet for `[PROBLEM]`.
+Her skal der indsættes de problemer du vil analysere i stedet for `[PROBLEMS]` (separeret med mellemrum), fx. `python main.py mistrivsel trafik`. Problemerne er konfigureret i `CONFIG`-objektet i `main.py`.
+Hvis flere end ét problem angives, gennemfører programmet desuden en meta-analyse, hvor det tester, om problemerne er signifikant anderledes ift. hvor stor spredning der er mellem besvarelserne. 
 
 Programmet består af tre trin:
- - Preprocessing af Excelfilen med besvarelser, hvor word embeddings beregnes både for det originale svar men også for en "kondenseret" udgave af svaret, hvor en Language Model koger alle besvarelser til et enkelt ord, så de er nemmere at sammenligne. Dette er med stor afstand det mest langvarige trin, og kan tage flere minutter.
+ - Preprocessing af Excelfilen med besvarelser, hvor word embeddings beregnes både for det originale svar men også for en "kondenseret" udgave af svaret, hvor en Language Model koger alle besvarelser til et enkelt eller få ord, så de er nemmere at sammenligne. Dette er med stor afstand det mest langvarige trin, og kan tage flere minutter.
  - Analyse af vektorafstande og andre uenighedsmål
  - Visualisering
 
