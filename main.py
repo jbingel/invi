@@ -1,8 +1,14 @@
 import os
 import argparse
 
+import numpy as np
+
 from preprocess import augment_csv
 from analysis import analyze
+from meta import compare_problems
+
+
+RESPONSE_TYPES = ["cause", "solution"]
 
 
 CONFIG = {
@@ -37,7 +43,7 @@ def main():
 
     # parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("problem", help="The problem to solve.")
+    parser.add_argument("problems", help="The problem(s) to analyze. If multiple values are given, the program will analyze them all and perform a meta analysis (testing statistical signifcance of difference in pairwise distances)", nargs='+', choices=CONFIG.keys())
     # option: is precompted?
     parser.add_argument("-p", "--precomputed", action="store_true", help="Use precomputed data.")
     # option: use condensed responses for analysis
@@ -48,36 +54,64 @@ def main():
     parser.add_argument("-v", "--visualize", action="store_true", help="Create clusters and visualization.")
     args = parser.parse_args()
 
+    problems = args.problems
 
-    problem = args.problem
+    average_distances = {
+        problem: {} for problem in problems
+    }
 
-    # Angiver stien til output-mappen
-    output_dir = f"output/{problem}"
-    os.makedirs(output_dir, exist_ok=True)
+    for problem in problems:
 
-    print(args)
+        print(f"""
+              
+###                          
+### Analyzing problem '{problem}' 
+###
 
-    # If not already done, precompute embeddings and condensated responses
-    if not args.precomputed:
-        augment_csv(
-            CONFIG[problem]["input_file"], 
-            CONFIG[problem]["cause_question"], 
-            CONFIG[problem]["solution_question"], 
-            CONFIG[problem]["weighting_question"], 
-            output_dir
-        )
-    
-    for response_type in ["cause", "solution"]:
-        analyze(
-            augmented_data_path=f"{output_dir}/{response_type}s_augmented.csv", 
-            question=CONFIG[problem][f"{response_type}_question"], 
-            response_type=response_type, 
-            condensed=args.condensed, 
-            importance_weighting=args.weighted,
-            visualize=args.visualize, 
-            output_dir=output_dir
-        )
-    
+""")
+
+        # path to output directory
+        output_dir = f"output/{problem}"
+        os.makedirs(output_dir, exist_ok=True)
+
+        # If not already done, precompute embeddings and condensated responses
+        if not args.precomputed:
+            augment_csv(
+                CONFIG[problem]["input_file"], 
+                CONFIG[problem]["cause_question"], 
+                CONFIG[problem]["solution_question"], 
+                CONFIG[problem]["weighting_question"], 
+                output_dir
+            )
+        
+        for response_type in RESPONSE_TYPES:
+            augmented_data_path=f"{output_dir}/{response_type}s_augmented.csv"
+            if not os.path.exists(augmented_data_path):
+                raise FileNotFoundError(f"Augmented data file '{augmented_data_path}' does not exist. Did you set the -p option without previously preprocessing the data?")
+
+            _results, problem_response_average_distances = analyze(
+                augmented_data_path=augmented_data_path,
+                question=CONFIG[problem][f"{response_type}_question"], 
+                response_type=response_type, 
+                condensed=args.condensed, 
+                importance_weighting=args.weighted,
+                visualize=args.visualize, 
+                output_dir=output_dir
+            )
+
+            average_distances[problem][response_type] = problem_response_average_distances
+        
+    if len(problems) > 1:
+        
+        print(f"""
+                
+###                          
+### Meta Analysis
+###
+
+    """)
+        
+    compare_problems(average_distances)
 
 if __name__ == "__main__":
     main()
