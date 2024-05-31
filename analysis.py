@@ -1,16 +1,14 @@
 import os
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import ast
-from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
-import umap
-from scipy.spatial.distance import cdist, cosine
+from scipy.spatial.distance import cosine, pdist
 import scipy 
 
 from visualization import create_visualizations
+from text_processing import get_embedding
+
+from tqdm import tqdm
+tqdm.pandas()
 
 def normalize(X):
     # normalize matrix rowwise to [0, 1]
@@ -20,10 +18,6 @@ def normalize(X):
 
 def rowwise_gini(X):
     def gini(x):
-        # (Warning: This is a concise implementation, but it is O(n**2)
-        # in time and memory, where n = len(x).  *Don't* pass in huge
-        # samples!)
-
         # Mean absolute difference
         mad = np.abs(np.subtract.outer(x, x)).mean()
         # Relative mean absolute difference
@@ -52,6 +46,7 @@ def analyze(
         df = df[df.relevant == True]
 
     report_file = os.path.join(output_dir, f"{response_type}_analysis.md")
+    print(f"Writing report to {report_file}")
 
     with open(report_file, "w") as f:
         f.write(f"# {response_type.capitalize()} analysis\n\n")
@@ -67,16 +62,21 @@ def analyze(
         f.write
 
     # Prepare the embeddings
-    response_column = "response" if not condensed else "condensed_response" 
-    embedding_column = "response_embedding" if not condensed else "condensed_response_embedding"
+    response_column = "response" if not condensed else "condensed_response_max5" 
+    embedding_column = "response_embedding" if not condensed else "condensed_response_embedding_max5"
+
+    print(response_column)
 
     if importance_weighting:
         print(f"Dataframe has {len(df)} rows before weighting")
         df = df.loc[df.index.repeat(df['weight'])]
         print(f"Dataframe has {len(df)} rows after weighting")
 
-    embeddings = df[embedding_column].dropna()
+    print(f"Getting embeddings for reponse column {response_column}")
+    # df[embedding_column] = df[response_column].apply(get_embedding)
+    # embeddings = np.vstack(df[embedding_column])s
     embeddings = np.vstack(df[embedding_column].apply(lambda x: np.array(eval(x))).tolist())
+    
 
     # Text labels for each point from "s_8" column
     text_labels = df[response_column].dropna().values
@@ -85,22 +85,31 @@ def analyze(
     # Convert the list of embeddings into a numpy array
     mean = np.mean(embeddings, axis=0)
 
-    # Step 3: Calculate the Euclidean distance of each embedding to the mean embedding
-    distances = np.sqrt(np.sum((embeddings - mean)**2, axis=1))
-    variance = np.mean(distances)
-
+    # Calculate the cosine distance of each embedding to the mean embedding
     cosine_distances = np.array([cosine(embedding, mean) for embedding in embeddings])
-    avg_cosine_distance = np.mean(cosine_distances) ** 2
+    avg_cosine_distance = np.mean(cosine_distances)
+    variance = np.var(cosine_distances)
 
+    # Calculate mean pairwise distance
+    pairwise_distances = pdist(embeddings, metric='cosine')
+    # Compute the mean of these distances
+    mean_pairwise_distance = np.mean(pairwise_distances)
+
+
+    # Calculate the Gini coefficient
     gini = rowwise_gini(normalize(embeddings)) 
 
+    # Calculate the entropy
     entropy = scipy.special.entr(
         normalize(embeddings)
     ).sum(axis=1).mean()
 
+    # Determinant of vector/vector distance matrix
+    M = embeddings.dot(embeddings.T)
+    determinant = np.linalg.det(M)
 
     if visualize:
-        # Standardize features by removing the mean and scaling to unit variance
+        
         create_visualizations(
             df, embeddings, output_dir, 
             response_type=response_type, 
@@ -118,12 +127,20 @@ def analyze(
             "value": variance
         },
         {
+            "metric": "Mean pairwise distance",
+            "value": mean_pairwise_distance
+        },
+        {
             "metric": "Entropy",
             "value": entropy
         },
         {
             "metric": "Gini",
             "value": gini
+        },
+        {
+            "metric": "Determinant",
+            "value": determinant
         }
     ])
 

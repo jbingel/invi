@@ -1,5 +1,4 @@
 import os
-import sys
 import argparse
 
 from preprocess import augment_csv
@@ -18,6 +17,18 @@ CONFIG = {
         "cause_question": "Hvad er efter din mening de(n) vigtigste årsag(er) til, at den kollektive trafik i yderområderne i Danmark ikke er tilstrækkelig?",
         "solution_question": "Hvordan kan man efter din opfattelse bedst forbedre den kollektive trafik i yderområderne i Danmark?",
         "weighting_question": "I hvor høj grad synes du, at du i dit arbejde, er relevant for den kollektive trafik i yderområderne i Danmark?"
+    },
+    "potentialegruppen": {
+        "input_file": "Resultater_potentialegruppen.xlsx",
+        "cause_question": "Hvad er efter din mening de(n) vigtigste årsag(er) til, at unge i potentialegruppen ikke har tilknytning til hverken uddannelse eller arbejdsmarkedet?",
+        "solution_question": "Hvordan kan man efter din mening bedst styrke tilknytningen til uddannelse og arbejdsmarked blandt de unge i potentialegruppen?",
+        "weighting_question": "I hvilken grad synes du, at du i dit arbejde er relevant for potentialegruppen?"
+    },
+    "co2-udledning": {
+        "input_file": "Resultater_co2-udledning i landbruget.xlsx",
+        "cause_question": "Hvad er efter din mening de(n) vigtigste årsag(er) til, at landbrugets CO2-udledning har den størrelse, det har?",
+        "solution_question": "Hvordan kan man efter din mening bedst nedbringe landbrugets CO2-udledning?",
+        "weighting_question": "I hvilken grad synes du, at du i dit arbejde er relevant for landbrugets CO2-udledning?"
     }
 }
 
@@ -43,6 +54,8 @@ def main():
     # Angiver stien til output-mappen
     output_dir = f"output/{problem}"
     os.makedirs(output_dir, exist_ok=True)
+
+    print(args)
 
     # If not already done, precompute embeddings and condensated responses
     if not args.precomputed:

@@ -72,8 +72,8 @@ def create_visualizations(
     # Create labels for each of the clusers.
     labels = {}
     for key, responses in class_dict.items():
-        labels[key] = responses[0]
-        # labels[key] = get_cluster_label(question, tuple(responses), tuple(labels.values()))
+        # labels[key] = responses[0]
+        labels[key] = get_cluster_label(question, tuple(responses), tuple(labels.values()))
         
     
     def map_cluster_to_label(cluster_index):

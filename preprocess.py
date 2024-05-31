@@ -2,7 +2,7 @@ import json
 import pandas as pd
 from tqdm import tqdm
 
-from text_processing import get_embedding, augment_response
+from text_processing import get_embedding, augment_response, seperate_complex_responses
 
 # Define a function to create files based on an Excel file and questions
 def augment_csv(
@@ -31,6 +31,8 @@ def augment_csv(
         "I meget høj grad": 5
     }
 
+    df.columns = df.columns.str.strip()
+
     df = df.dropna(subset=[cause_question, solution_question, weighting_question])
 
     # Apply mapping to a specific question in the DataFrame to filter data
@@ -44,7 +46,7 @@ def augment_csv(
 
     combined_causes = []
     combined_solutions = []
-    
+
     print("Processing responses. Condensing and embedding...")
     for idx, row in tqdm(df.iterrows(), total=len(df)):
         for col in cause_cols:
@@ -52,38 +54,41 @@ def augment_csv(
             weight = row[weighting_question]
 
             if pd.notnull(cause):
-                condensed, condensed_max3, condensed_max4, relevant = augment_response(cause, cause_question)
-                
-                combined_causes.append({
-                    "weight": weight,
-                    "relevant": relevant,
-                    "condensed_response": condensed,
-                    "condensed_response_max3": condensed_max3,
-                    "condensed_response_max4": condensed_max4,
-                    "response": cause,
-                    "original_index": idx,
-                    "response_embedding": get_embedding(cause),
-                    "condensed_response_embedding": get_embedding(condensed),
-                    "condensed_response_embedding_max3": get_embedding(condensed_max3),
-                    "condensed_response_embedding_max3": get_embedding(condensed_max4),
-                })
+                for output in augment_response(cause, cause_question):
+                    condensed, condensed_max4, condensed_max5, relevant = output
+                    
+                    combined_causes.append({
+                        "weight": weight,
+                        "relevant": relevant,
+                        "condensed_response": condensed,
+                        "condensed_response_max4": condensed_max4,
+                        "condensed_response_max5": condensed_max5,
+                        "response": cause,
+                        "original_index": idx,
+                        "response_embedding": get_embedding(cause),
+                        "condensed_response_embedding": get_embedding(condensed),
+                        "condensed_response_embedding_max4": get_embedding(condensed_max4),
+                        "condensed_response_embedding_max5": get_embedding(condensed_max5),
+                    })
         for col in solution_cols:
             solution = row[col]
             if pd.notnull(solution):
-                condensed, condensed_max3, condensed_max4, relevant = augment_response(solution, solution_question)
-                combined_solutions.append({
-                    "weight": weight,
-                    "relevant": relevant,
-                    "condensed_response": condensed,
-                    "condensed_response_max3": condensed_max3,
-                    "condensed_response_max4": condensed_max4,
-                    "response": solution,
-                    "original_index": idx,
-                    "response_embedding": get_embedding(solution),
-                    "condensed_response_embedding": get_embedding(condensed),
-                    "condensed_response_embedding_max3": get_embedding(condensed_max3),
-                    "condensed_response_embedding_max4": get_embedding(condensed_max4),
-                })
+                for output in augment_response(solution, solution_question):
+                    condensed, condensed_max5, condensed_max4, relevant = output
+
+                    combined_solutions.append({
+                        "weight": weight,
+                        "relevant": relevant,
+                        "condensed_response": condensed,
+                        "condensed_response_max4": condensed_max4,
+                        "condensed_response_max5": condensed_max5,
+                        "response": solution,
+                        "original_index": idx,
+                        "response_embedding": get_embedding(solution),
+                        "condensed_response_embedding": get_embedding(condensed),
+                        "condensed_response_embedding_max4": get_embedding(condensed_max4),
+                        "condensed_response_embedding_max5": get_embedding(condensed_max5),
+                    })
 
 
     print(f"Saving augmented data to {output_dir}")
