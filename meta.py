@@ -16,7 +16,7 @@ def compare_problems(average_distances: Dict[str, Dict[str, List[float]]]):
                 for response_type in response_types:
                     if other_problem != problem:
 
-                        print(f"##Comparing '{problem}' with '{other_problem}' ({response_type})\n")
+                        print(f"## Comparing '{problem}' with '{other_problem}' ({response_type})\n")
                         difference_of_means = np.mean(average_distances[problem][response_type]) - np.mean(average_distances[other_problem][response_type])
                         interpretation = "more similar" if difference_of_means < 0 else "less simliar"
                         test_result = ks_2samp(average_distances[problem][response_type], average_distances[other_problem][response_type])

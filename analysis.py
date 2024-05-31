@@ -1,8 +1,9 @@
 import os
 import pandas as pd
 import numpy as np
-from scipy.spatial.distance import cosine, pdist
+from scipy.spatial.distance import cosine
 import scipy 
+from sklearn.metrics import pairwise_distances
 
 from visualization import create_visualizations
 
@@ -49,6 +50,12 @@ def write_report_file(output_dir: str, question: str, response_type: str, conden
         f.write(f"## Metrics \n\n {df_results.to_markdown()}")
 
     return report_file
+
+
+def nonzero_pairwise_distances(embeddings, metric):
+    distances = np.rot90(np.triu(pairwise_distances(embeddings, metric=metric))).reshape(-1)
+    distances = distances[distances.nonzero()]
+    return distances
 
 
 def analyze(
@@ -105,19 +112,19 @@ def analyze(
 
     # Metric: mean pairwise distance
     # Calculate mean pairwise distance
-    pairwise_cosine_distances = pdist(embeddings, metric='cosine')
+    pairwise_distances_cosine = nonzero_pairwise_distances(embeddings, metric='cosine')
     results.append({
         "metric": "Mean pairwise cosine distance",
-        "value": np.mean(pairwise_cosine_distances),
+        "value": np.mean(pairwise_distances_cosine),
     })
 
 
     # Metric: mean pairwise distance
     # Calculate mean pairwise distance
-    pairwise_euclidean_distances = pdist(embeddings, metric='euclidean')
+    pairwise_distances_euclidean = nonzero_pairwise_distances(embeddings, metric='euclidean')
     results.append({
         "metric": "Mean pairwise Euclidean distance",
-        "value": np.mean(pairwise_euclidean_distances),
+        "value": np.mean(pairwise_distances_euclidean),
     })
 
     # Metric: Gini coefficient
@@ -162,5 +169,5 @@ def analyze(
         write_report_file(output_dir, question, response_type, condensed, df['condensed_response'], importance_weighting, df_results)
             
 
-    return results, pairwise_cosine_distances
+    return results, pairwise_distances_cosine
 
