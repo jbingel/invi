@@ -10,7 +10,8 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 GPT3 = "gpt-3.5-turbo"
 GPT4 = "gpt-4o"
 DEFAULT_MODEL = GPT4
-DEFAULT_EMBEDDING_MODEL = "intfloat/multilingual-e5-base"
+DEFAULT_EMBEDDING_MODEL = "intfloat/multilingual-e5-large"
+# DEFAULT_EMBEDDING_MODEL = "KennethEnevoldsen/dfm-sentence-encoder-large-exp2-no-lang-align"
 
 @lru_cache(1)
 def get_embedding_model(model: str = DEFAULT_EMBEDDING_MODEL) -> List[float]:
@@ -166,7 +167,9 @@ def get_cluster_label(question: str, responses: Iterable[str], labels: Iterable[
     system_prompt = f"""Du er en hjælpsom assitent. Du får i det følgende
     en række besvarelser fra et spørgeskema omkring et samfundsrelevant problem.
 
-    Din opgave er at genere et overskfift, der grupperer de følgende besvarelser, altså et overordnet tema. Det skal dog være specifik og relevant ift det originale spørgsmål.
+    Din opgave er at genere et overskfift, der grupperer de følgende besvarelser, altså et overordnet tema. 
+    Det skal være specifik og relevant ift det originale spørgsmål. 
+    Det skal ikke være en generisk omformulering af det originale spørgsmål, men så specifik som muligt, men det stadig dækker over de fleste besvarelser.
 
     Overskriften må ikke være længere end femord.
 

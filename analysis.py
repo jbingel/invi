@@ -5,6 +5,7 @@ from scipy.spatial.distance import cosine
 import scipy 
 from sklearn.metrics import pairwise_distances
 
+from text_processing import get_embedding
 from visualization import create_visualizations
 
 from tqdm import tqdm
@@ -86,6 +87,8 @@ def analyze(
         print(f"Dataframe has {len(df)} rows after weighting")
 
     embeddings = np.vstack(df[embedding_column].apply(lambda x: np.array(eval(x))).tolist())
+    # Uncomment the following line to recompute embeddings (e.g. when trying a different embedding model)
+    # embeddings = np.vstack(df[response_column].apply(lambda x: np.array(get_embedding(x))).tolist())
     
 
     ## ANALYSIS ##
@@ -94,8 +97,11 @@ def analyze(
     # Metric: average distance from mean
     # Convert the list of embeddings into a numpy array
     mean = np.mean(embeddings, axis=0)
+
     # Calculate the cosine distance of each embedding to the mean embedding
     cosine_distances = np.array([cosine(embedding, mean) for embedding in embeddings])
+    df["cosine_distance_from_mean"] = cosine_distances
+    df.to_csv(augmented_data_path)
     avg_cosine_distance = np.mean(cosine_distances)
     results.append({
         "metric": "Avg. distance from mean",
